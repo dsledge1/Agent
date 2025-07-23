@@ -1,8 +1,10 @@
-from functions.write_file import write_file
+from functions.run_python import run_python_file
 
 def test():
-    print(f"Result for lorem\n{write_file("calculator", "lorem.txt", "wait, this isn't lorem ipsum")}")
-    print(f"Result for pkg/morelorem.txt\n{write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet")}")
-    print(f"Result for /tmp/temp.txt\n{write_file("calculator", "/tmp/temp.txt", "this should not be allowed")}")
-        
+    print(f"Result for main.py\n{run_python_file("calculator", "main.py")}")
+    print(f"Result for main.py calc\n{run_python_file("calculator", "main.py", ["3 + 5"])}")
+    print(f"Result for tests.py\n{run_python_file("calculator", "tests.py")}")
+    print(f"Result for ../main.py\n{run_python_file("calculator", "../main.py")}")
+    print(f"Result for nonexistant.py\n{run_python_file("calculator", "nonexistant.py")}")
+     
 test()
