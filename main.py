@@ -3,11 +3,19 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from config import *
+from functions.get_files_info import *
 
 load_dotenv("./api.env")
 key=os.environ.get("GEMINI_API_KEY")
 
 client = genai.Client(api_key=key)
+
+available_functions = types.Tool(
+    function_declarations=[
+        schema_get_files_info,
+    ]
+)
 
 def main():
     print("Hello from agent!")
@@ -18,7 +26,16 @@ def main():
     messages = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
-    response = client.models.generate_content(model='gemini-2.0-flash-001', contents=messages,)
+    response = client.models.generate_content(
+        model='gemini-2.0-flash-001', 
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions], system_instruction=system_prompt)
+        )
+    function_call_part = response.function_calls
+    if response.function_calls:
+        for item in response.function_calls:
+            print(f"Calling function: {item.name}({item.args})")
     print(response.text)
     if len(sys.argv) > 2:
         if sys.argv[2] == "--verbose":
