@@ -1,4 +1,4 @@
-from functions.run_python import run_python_file
+from functions.run_python_file import run_python_file
 
 def test():
     print(f"Result for main.py\n{run_python_file("calculator", "main.py")}")
