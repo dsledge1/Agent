@@ -35,28 +35,40 @@ def main():
     messages = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
-    response = client.models.generate_content(
-        model='gemini-2.0-flash-001', 
-        contents=messages,
-        config=types.GenerateContentConfig(
-            tools=[available_functions], system_instruction=system_prompt)
-        )
-    verbose = False
-    if len(sys.argv) > 2:
-        if sys.argv[2] == "--verbose":
-            print(f"User prompt: {user_prompt}\nPrompt tokens: {response.usage_metadata.prompt_token_count} \nResponse tokens: {response.usage_metadata.candidates_token_count}")
-            verbose = True
+    for i in range(20):
+        i+=1
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.0-flash-001', 
+                contents=messages,
+                config=types.GenerateContentConfig(
+                    tools=[available_functions], system_instruction=system_prompt)
+                )
 
-    if response.function_calls:
-        for item in response.function_calls:
-            function_call_results = call_function(item)
-            if not function_call_results.parts[0].function_response.response:
-                raise Exception("No Response Found")
-            if verbose:
-                print(f"-> {function_call_results.parts[0].function_response.response}")
+            for candidate in response.candidates:
+                messages.append(candidate.content)
 
-    print(response.text)
+            verbose = False
+            if len(sys.argv) > 2:
+                if sys.argv[2] == "--verbose":
+                    print(f"User prompt: {user_prompt}\nPrompt tokens: {response.usage_metadata.prompt_token_count} \nResponse tokens: {response.usage_metadata.candidates_token_count}")
+                    verbose = True
 
-
+            if response.text and not response.function_calls:
+                print(response.text)
+                break
+            
+            if response.function_calls:
+                for item in response.function_calls:
+                    function_call_results = call_function(item)
+                    if not function_call_results.parts[0].function_response.response:
+                        raise Exception("No Response Found")
+                    if verbose:
+                        print(f"-> {function_call_results.parts[0].function_response.response}")
+                    messages.append(function_call_results)
+            
+        except Exception as e:
+            return f"Error: {e}"
+    
 if __name__ == "__main__":
     main()
